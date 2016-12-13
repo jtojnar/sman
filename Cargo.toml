@@ -1,0 +1,9 @@
+[package]
+name = "sman"
+version = "0.1.0"
+authors = ["Jan Tojnar <jtojnar@gmail.com>"]
+
+[dependencies]
+cursive = "0.3"
+glob = "0.2"
+regex = "0.1"
