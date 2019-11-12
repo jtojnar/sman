@@ -28,8 +28,8 @@ fn main() {
                     Ok(p) => {
                         let file = format!("{}", p.display());
                         let c = re.captures(file.as_str()).unwrap();
-                        let page = format!("{}", c.at(1).unwrap());
-                        let section = format!("{}", c.at(2).unwrap());
+                        let page = format!("{}", c.get(1).map_or("", |m| m.as_str()));
+                        let section = format!("{}", c.get(2).map_or("", |m| m.as_str()));
                         let label = format!("{} ({})", page, section);
                         section_select.add_item(label, (section, page));
                     }

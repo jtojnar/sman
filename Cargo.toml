@@ -6,4 +6,4 @@ authors = ["Jan Tojnar <jtojnar@gmail.com>"]
 [dependencies]
 cursive = "0.13"
 glob = "0.3"
-regex = "0.1"
+regex = "1.3"
