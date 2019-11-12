@@ -3,6 +3,7 @@ extern crate glob;
 extern crate regex;
 
 use cursive::Cursive;
+use cursive::traits::Scrollable;
 use cursive::views::Dialog;
 use cursive::views::SelectView;
 use glob::glob;
@@ -46,8 +47,8 @@ fn main() {
                 .expect("failed to execute process");
         });
 
-        let mut siv = Cursive::new();
-        siv.add_layer(Dialog::around(section_select).title("Which section do you wish to open?"));
+        let mut siv = Cursive::default();
+        siv.add_layer(Dialog::around(section_select.scrollable()).title("Which section do you wish to open?"));
         siv.run();
     }
 }
