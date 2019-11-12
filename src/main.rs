@@ -11,28 +11,33 @@ use regex::Regex;
 use std::env;
 use std::process::Command;
 use std::process::Stdio;
+use std::str;
 
 fn main() {
-    let re = Regex::new(r"^/usr/share/man/man[^/]+/([^.]+).([^.]+)").unwrap();
+    let manpath = Command::new("man").arg("--path").output().expect("unable to get man path");
+
+    let re = Regex::new(r"man[^/]+/([^.]+).([^.]+)").unwrap();
     for page in env::args().skip(1) {
         let mut section_select = SelectView::new();
 
-        let pattern = format!("/usr/share/man/man*/{}.*", page);
-        let paths = glob(pattern.as_str()).expect("Pattern error");
-        for path in paths {
-            match path {
-                Ok(p) => {
-                    let file = format!("{}", p.display());
-                    let c = re.captures(file.as_str()).unwrap();
-                    let page = format!("{}", c.at(1).unwrap());
-                    let section = format!("{}", c.at(2).unwrap());
-                    let label = format!("{} ({})", page, section);
-                    section_select.add_item(label, (section, page));
-                }
-                // Inaccessible directories are simply ignored,
-                // as man viewer probably cannot reach them either.
-                Err(_) => {}
-            };
+        for manprefix in manpath.stdout.split(|c| *c == b':').map(|p| str::from_utf8(p).unwrap()) {
+            let pattern = format!("{}/man*/{}.*", manprefix, page);
+            let paths = glob(pattern.as_str()).expect("Pattern error");
+            for path in paths {
+                match path {
+                    Ok(p) => {
+                        let file = format!("{}", p.display());
+                        let c = re.captures(file.as_str()).unwrap();
+                        let page = format!("{}", c.at(1).unwrap());
+                        let section = format!("{}", c.at(2).unwrap());
+                        let label = format!("{} ({})", page, section);
+                        section_select.add_item(label, (section, page));
+                    }
+                    // Inaccessible directories are simply ignored,
+                    // as man viewer probably cannot reach them either.
+                    Err(_) => {}
+                };
+            }
         }
 
         section_select.set_on_submit(|s, &(ref section, ref page)| {
