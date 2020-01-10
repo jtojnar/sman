@@ -11,6 +11,8 @@ use cursive::views::SelectView;
 use glob::glob;
 use regex::Regex;
 use std::env;
+use std::collections::HashSet;
+use std::fs;
 use std::process::Command;
 use std::process::Stdio;
 use std::str;
@@ -19,6 +21,7 @@ fn main() {
     pretty_env_logger::init();
 
     let manpath = Command::new("man").arg("--path").output().expect("unable to get man path");
+    let mut listed_link_targets = HashSet::new();
 
     let re = Regex::new(r"man[^/]+/([^.]+)\.([^.]+)").unwrap();
     for page in env::args().skip(1) {
@@ -31,13 +34,34 @@ fn main() {
             for path in paths {
                 match path {
                     Ok(p) => {
-                        debug!("Adding {}", p.display());
-                        let file = format!("{}", p.display());
-                        let c = re.captures(file.as_str()).unwrap();
-                        let page = format!("{}", c.get(1).map_or("", |m| m.as_str()));
-                        let section = format!("{}", c.get(2).map_or("", |m| m.as_str()));
-                        let label = format!("{} ({})", page, section);
-                        section_select.add_item(label, (section, page));
+                        match fs::canonicalize(p.clone()) {
+                            Ok(link_target) => {
+                                if listed_link_targets.contains(&link_target) {
+                                    if link_target == p {
+                                        debug!("Skipping already present {}", p.display());
+                                    } else {
+                                        debug!("Skipping already present {} (pointing to {})", p.display(), link_target.display());
+                                    }
+                                } else {
+                                    if link_target == p {
+                                        debug!("Adding {}", p.display());
+                                    } else {
+                                        debug!("Adding {} (pointing to {})", p.display(), link_target.display());
+                                    }
+
+                                    let file = format!("{}", p.display());
+                                    let c = re.captures(file.as_str()).unwrap();
+                                    let page = format!("{}", c.get(1).map_or("", |m| m.as_str()));
+                                    let section = format!("{}", c.get(2).map_or("", |m| m.as_str()));
+                                    let label = format!("{} ({})", page, section);
+                                    section_select.add_item(label, (section, page));
+                                    listed_link_targets.insert(link_target);
+                                }
+                            }
+                            Err(e) => {
+                                error!("Unable to canonicalize {}:\n{}", p.display(), e);
+                            }
+                        }
                     }
                     // Inaccessible directories are simply ignored,
                     // as man viewer probably cannot reach them either.
