@@ -49,12 +49,12 @@ fn main() {
                                         debug!("Adding {} (pointing to {})", p.display(), link_target.display());
                                     }
 
-                                    let file = format!("{}", p.display());
+                                    let file = format!("{}", link_target.display());
                                     let c = re.captures(file.as_str()).unwrap();
                                     let page = format!("{}", c.get(1).map_or("", |m| m.as_str()));
                                     let section = format!("{}", c.get(2).map_or("", |m| m.as_str()));
                                     let label = format!("{} ({})", page, section);
-                                    section_select.add_item(label, (section, page));
+                                    section_select.add_item(label, (file,));
                                     listed_link_targets.insert(link_target);
                                 }
                             }
@@ -70,11 +70,10 @@ fn main() {
             }
         }
 
-        section_select.set_on_submit(|s, &(ref section, ref page)| {
+        section_select.set_on_submit(|s, &(ref file,)| {
             s.quit();
             Command::new("man")
-                .arg(section)
-                .arg(page)
+                .arg(file)
                 .stdout(Stdio::inherit())
                 .stdin(Stdio::inherit())
                 .stderr(Stdio::inherit())
