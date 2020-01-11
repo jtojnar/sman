@@ -1,5 +1,7 @@
 # sman
 
+> I started using using `man --where --all $page | fzf | xargs man` instead of this so this is no longer maintained.
+
 Utility that lists the sections requested term is available in and allows
 user to choose. Kind of like interactive `apropos`.
 
