@@ -23,7 +23,7 @@ fn main() {
     let manpath = Command::new("man").arg("--path").output().expect("unable to get man path");
     let mut listed_link_targets = HashSet::new();
 
-    let re = Regex::new(r"man[^/]+/([^.]+)\.([^.]+)").unwrap();
+    let re = Regex::new(r"man[^/]+/(.+?)\.([^.]+)(\.gz)?$").unwrap();
     for page in env::args().skip(1) {
         let mut section_select = SelectView::new();
 
